@@ -1,2 +1,11 @@
 # PodcastPy
-Python for podcast auto trimmer, sound enhancement, and noise removal.
+
+Podcast Automation Tools
+
+## Installation
+
+## Requirements
+
+## Usage
+
+## Support
