@@ -6,6 +6,7 @@ Created on Fri 02 15:03:00 2022
 """
 
 from .podcastpy import PodcastPy
+from .version import __version__
 
 
 def auto_trimmer(original_video_path:str, result_video_path:str, time_margin_in_second=0.25, noise_sampling_level=100):
