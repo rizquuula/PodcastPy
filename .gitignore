@@ -11,3 +11,7 @@ ffmpeg*
 
 temp_
 venv
+
+build
+dist
+*.egg*
