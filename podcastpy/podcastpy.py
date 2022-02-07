@@ -17,10 +17,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 class PodcastPy:
+    """
+    Podcast Tool in Python
+    @author: M Razif Rizqullah (https://github.com/eiproject)
+    """
     def __init__(self):
         self.__title__ = 'PodcastPy'
         self.__description__ = 'Podcast Automation Tools'
         self.__original_video_path = None
+        self.__wav_audio_path = None
         self.__result_video_path = None
         self.__temp_dir = 'temp_'
         self.__temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
@@ -32,11 +37,13 @@ class PodcastPy:
     
     def __extract_audio_raw_data(self):
         '''Extract the audio to a .wav file'''
-        wav_filename = os.path.splitext(os.path.basename(self.__original_video_path))[0] + '.wav'
-        AudioSegment.from_file(self.__original_video_path).export(wav_filename, format='wav')
+        self.__wav_audio_path = os.path.join(
+            self.__temp_dir, os.path.splitext(os.path.basename(self.__original_video_path))[0] + '.wav') 
+        
+        AudioSegment.from_file(self.__original_video_path).export(self.__wav_audio_path, format='wav')
 
         # read wav file using scipy
-        rate, audData = scipy.io.wavfile.read(wav_filename)
+        rate, audData = scipy.io.wavfile.read(self.__wav_audio_path)
 
         # if stereo grab both channels
         if audData.shape[1] > 1:
@@ -181,7 +188,7 @@ class PodcastPy:
         
         code = subprocess.call(merge_command, shell=True)
         # print('Result code: ', code)
-        self.__delete_temp_dir()
+        return code
 
     
     def __create_or_replace_temp_dir(self):
@@ -194,13 +201,16 @@ class PodcastPy:
     def __delete_temp_dir(self):
         shutil.rmtree(self.__temp_dir)
         
+    def __delete_wav_audio_path(self):
+        os.remove(self.__wav_audio_path)
+        
         
     def __create_or_replace_result_file(self):
         if os.path.isfile(self.__result_video_path):
             os.remove(self.__result_video_path)
     
-    def main(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, hist_sampling_data:int=100):
-        """Main function to work with PodcastPy
+    def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, hist_sampling_data:int=100):
+        """Auto trim video to remove audio noise and blank using PodcastPy
 
         Args:
             original_video_path (str): Original video to be processed
@@ -246,3 +256,5 @@ class PodcastPy:
         self.__ffmpeg_merge_video()
         
         print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))
+        self.__delete_wav_audio_path()
+        self.__delete_temp_dir()
