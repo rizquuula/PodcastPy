@@ -1,4 +1,8 @@
 venv
 .idea
 *.pyc
+*.wav
+*.mp4
 __pycache__
+
+ffmpeg*

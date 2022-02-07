@@ -1,7 +1,7 @@
 from podcastpy import main
 
 # a place where your original video stored
-ORIGINAL_PATH = "before.mp4"
+ORIGINAL_PATH = "240.mp4"
 
 # a desired path where your result video will saved
 RESULT_PATH = "after.mp4"
