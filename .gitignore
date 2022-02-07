@@ -1,8 +1,13 @@
-venv
 .idea
+.vscode
+
 *.pyc
 *.wav
 *.mp4
+
 __pycache__
 
 ffmpeg*
+
+temp_
+venv

@@ -4,11 +4,12 @@ Created on Fri 02 15:03:00 2022
 @author: eiproject (https://github.com/eiproject)
 
 """
+import subprocess
+import shutil
 from pydub import AudioSegment
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.editor import VideoFileClip
 import os
 import csv
-import copy
 import time
 import scipy.io.wavfile
 import numpy as np
@@ -21,6 +22,8 @@ class PodcastPy:
         self.__description__ = 'Podcast Automation Tools'
         self.__original_video_path = None
         self.__result_video_path = None
+        self.__temp_dir = 'temp_'
+        self.__temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
         
     def __open_video_file(self):
         '''Open audio from video file using pydub'''
@@ -49,7 +52,7 @@ class PodcastPy:
         return channel1, channel2, time_tick
     
     
-    def __noise_removal(self, channel1, channel2, sampling_data, time_tick):
+    def __noise_threshold_process(self, channel1, channel2, sampling_data, time_tick):
         '''Remove noise using histogram operation'''
         # concat stereo to mono
         channel_concat = np.int32(np.mean(np.array([np.int32(channel1), np.int32(channel2)]), axis=0)) \
@@ -84,7 +87,8 @@ class PodcastPy:
 
         return channel_noise_removed
     
-    def __filter_blank_space(self, channel, sample_rate, save_to_filename=None):
+    def __finding_blank_space(self, channel, sample_rate, save_to_filename=None):
+        '''Find noise or a zero blank amplitude'''
         # start to filter blank space [start_index, end_index, streak_counter]
         filtered_zero = []
         start_index = 0
@@ -93,7 +97,7 @@ class PodcastPy:
 
         min_streak = sample_rate // 2
 
-        for i in tqdm(range(len(channel) - 1)):
+        for i in tqdm(range(len(channel) - 1), desc="Finding noise: "):
             if channel[i] == 0:
                 if channel[i + 1] == 0:
                     if start_index == 0:
@@ -125,7 +129,7 @@ class PodcastPy:
         return filtered_zero
 
     def __trim_timer(self, filtered_array, min_margin=0.5, save_to_filename=None):
-        # good for trim
+        '''Create trimming time'''
         min_threshold_sec = min_margin * 2 + 0.1
         trim_time = []
         tmp_start_time = 0
@@ -147,22 +151,55 @@ class PodcastPy:
         return trim_time
     
     
-    def __auto_trim_and_merge(self, trim_time):
-        clip_array = []
-        print("Auto trimmer processing {} video parts".format(len(trim_time)))
-        for i in tqdm(range(len(trim_time))):
+    def __create_temp_videos(self, trim_time):
+        temp_videos = []
+        num_of_parts = len(trim_time)
+        for i in tqdm(range(num_of_parts), desc="Trimming {} parts: ".format(num_of_parts)):
             clip = VideoFileClip(self.__original_video_path).subclip(trim_time[i][0], trim_time[i][1])
+            temp_filename = 'temp_processing_{}.mp4'.format(i)
+            clip.write_videofile(os.path.join(self.__temp_dir, temp_filename), 
+                              codec="libx264",
+                              temp_audiofile='temp-audio.m4a', 
+                              remove_temp=True, 
+                              audio_codec='aac',
+                              logger=None,
+                              verbose=False
+                              )
+            temp_videos.append(temp_filename)
+        
+        return temp_videos
 
-            # clip.to_videofile('res{}.mp4'.format(i), codec="libx264",
-            #                   temp_audiofile='temp-audio.m4a', remove_temp=True, audio_codec='aac')
-            clip_array.append(copy.copy(clip))
-            clip.close()
 
-        final = concatenate_videoclips(clip_array)
-        final.write_videofile(self.__result_video_path)
+    def __create_temp_metadata(self, videos):
+        with open(self.__temp_vid_result_metadata, mode='w', newline='') as f:
+            for v in videos:
+                f.write('file ' + v + '\n')
+        
+    def __ffmpeg_merge_video(self):
+        merge_command = 'ffmpeg -hide_banner -loglevel error -f concat -i {} -c copy {}'.format(
+            self.__temp_vid_result_metadata, self.__result_video_path)
+        
+        code = subprocess.call(merge_command, shell=True)
+        # print('Result code: ', code)
+        self.__delete_temp_dir()
 
-
-    def main(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.25, hist_sampling_data:int=100):
+    
+    def __create_or_replace_temp_dir(self):
+        if os.path.isdir(self.__temp_dir):
+            self.__delete_temp_dir()
+            
+        os.makedirs(self.__temp_dir)
+        
+        
+    def __delete_temp_dir(self):
+        shutil.rmtree(self.__temp_dir)
+        
+        
+    def __create_or_replace_result_file(self):
+        if os.path.isfile(self.__result_video_path):
+            os.remove(self.__result_video_path)
+    
+    def main(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, hist_sampling_data:int=100):
         """Main function to work with PodcastPy
 
         Args:
@@ -175,30 +212,37 @@ class PodcastPy:
         self.__original_video_path = original_video_path
         self.__result_video_path = result_video_path
         
-        print("Process 1/7... Opening video...")
+        self.__create_or_replace_temp_dir()
+        self.__create_or_replace_result_file()
+        
+        print("Process 1/8... Opening video...")
         sound = self.__open_video_file()
         
-        print("Process 2/7... Extracting audio...")
+        print("Process 2/8... Extracting audio...")
         channel1, channel2, time_tick = self.__extract_audio_raw_data()
 
-        print("Process 3/7... Audio noise removal...")
-        channel_noise_removed = self.__noise_removal(channel1=channel1,
+        print("Process 3/8... Audio noise threshold detection...")
+        channel_noise_removed = self.__noise_threshold_process(channel1=channel1,
                                             channel2=channel2,
                                             sampling_data=hist_sampling_data,
                                             time_tick=time_tick)
 
-        print("Process 4/7... Audio filter zero space...")
-        filtered_zero = self.__filter_blank_space(
+        print("Process 4/8... Audio noise thresold process...")
+        filtered_zero = self.__finding_blank_space(
                                         channel=channel_noise_removed,
                                         sample_rate=sound.frame_rate)
         # save_to_filename="filter.csv")  # debugging purpose
 
-        print("Process 5/7... Calculating trim time from audio...")
+        print("Process 5/8... Gathering audio noise time data...")
         time_for_trimming = self.__trim_timer(filtered_array=filtered_zero,
                                     min_margin=time_margin_in_second)
         # save_to_filename="trim.csv")  # debugging purpose
 
-        print("Process 6/7... Trim and merge video...")
-        self.__auto_trim_and_merge(trim_time=time_for_trimming)
-
-        print("Process 7/7... Done in {} seconds...".format(time.time() - start_time))
+        print("Process 6/8... Trimming video into pieces...")
+        temp_videos = self.__create_temp_videos(trim_time=time_for_trimming)
+        self.__create_temp_metadata(temp_videos)
+        
+        print("Process 7/8... Merging video...")
+        self.__ffmpeg_merge_video()
+        
+        print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))

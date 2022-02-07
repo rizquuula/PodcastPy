@@ -8,7 +8,7 @@ Created on Fri 02 15:03:00 2022
 from .podcastpy import PodcastPy
 
 
-def main(original_video_path, result_video_path, time_margin_in_second=0.25, hist_sampling_data=100):
+def auto_trimmer(original_video_path, result_video_path, time_margin_in_second=0.25, hist_sampling_data=50):
     app = PodcastPy()
     
     app.main(original_video_path, 
