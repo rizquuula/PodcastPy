@@ -6,7 +6,7 @@ README = (BASE_DIR / "README.md").read_text()
 
 setup(
     name="podcastpy",
-    version="0.1.0",
+    version="0.0.1",
     author="M Razif Rizqullah",
     author_email="razifrizqullah@gmail.com",
     url='https://github.com/eiproject/PodcastPy',
