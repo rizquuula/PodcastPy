@@ -44,3 +44,9 @@ Reach me out on [Email](mailto:razifrizqullah@gmail.com "razifrizqullah@gmail.co
 
 If you find out this library as useful please give it a star to let everyone know.
 If you have idea on how to improve this library, I am always open for every contributors. Thank you!
+
+## Copyright
+
+MIT License
+
+Copyright (c) 2021 Muhammad Razif Rizqullah
