@@ -209,15 +209,16 @@ class PodcastPy:
         if os.path.isfile(self.__result_video_path):
             os.remove(self.__result_video_path)
     
-    def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, hist_sampling_data:int=100):
+    def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, noise_sampling_level:int=100):
         """Auto trim video to remove audio noise and blank using PodcastPy
 
         Args:
             original_video_path (str): Original video to be processed
             result_video_path (str): Video result path
             time_margin_in_second (float, optional): Minimum time between the sound gap. Defaults to 0.25 seconds.
-            hist_sampling_data (int, optional): Histogram sampling data, used on noise removal process. Defaults to 100.
+            noise_sampling_level (int, optional): Histogram sampling data, used on noise removal process. Defaults to 100.
         """
+        
         start_time = time.time()
         self.__original_video_path = original_video_path
         self.__result_video_path = result_video_path
@@ -234,7 +235,7 @@ class PodcastPy:
         print("Process 3/8... Audio noise threshold detection...")
         channel_noise_removed = self.__noise_threshold_process(channel1=channel1,
                                             channel2=channel2,
-                                            sampling_data=hist_sampling_data,
+                                            sampling_data=noise_sampling_level,
                                             time_tick=time_tick)
 
         print("Process 4/8... Audio noise thresold process...")
