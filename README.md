@@ -17,6 +17,8 @@ Podcast Helper Tool in Python
 pip install podcastpy
 ```
 
+PyPi link: <https://pypi.org/project/podcastpy>
+
 ## Usage Example
 
 ```python
