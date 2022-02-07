@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 class PodcastPy:
     """
-    Podcast Tool in Python
+    Podcast Helper Tool in Python
     @author: M Razif Rizqullah (https://github.com/eiproject)
     """
     def __init__(self):
