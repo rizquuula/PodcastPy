@@ -2,6 +2,11 @@
 
 Podcast Helper Tool in Python
 
+![PyPI - License](https://img.shields.io/pypi/l/podcastpy)
+![GitHub top language](https://img.shields.io/github/languages/top/eiproject/PodcastPy)
+![GitHub all releases](https://img.shields.io/github/downloads/eiproject/PodcastPy/total)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/eiproject/podcastpy)
+
 ## Description
 
 **Podcast** is something that we usually hear or watch, fill our warm and relax time. Sometimes podcasters find that it is difficult to manage time to create content and process it for a *ready to hear* product. `PodcastPy` is an open-source program aimed at solving the basic and recurring problems that often occur in podcast creation.
