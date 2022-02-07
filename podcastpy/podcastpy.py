@@ -8,6 +8,7 @@ from pydub import AudioSegment
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 import os
 import csv
+import copy
 import time
 import scipy.io.wavfile
 import numpy as np
@@ -48,13 +49,15 @@ class PodcastPy:
         return channel1, channel2, time_tick
     
     
-    def __noise_removal(self, channel1, channel2, hist_sampling_data):
-        channel_concat = np.int16(np.mean(np.array([np.int32(channel1), np.int32(channel2)]), axis=0))
-        sampling_data = hist_sampling_data
+    def __noise_removal(self, channel1, channel2, sampling_data, time_tick):
+        '''Remove noise using histogram operation'''
+        # concat stereo to mono
+        channel_concat = np.int32(np.mean(np.array([np.int32(channel1), np.int32(channel2)]), axis=0)) \
+            if channel2 != [] else np.int32(channel1)
 
         # # stereo plot
         # plt.figure(1)
-        # plt.plot(time_tick, channel1, linewidth=0.05, alpha=1, color='#000000')
+        # plt.plot(time_tick, channel1, linewidth=0.05, alpha=1, color='#0000ff')
         # plt.plot(time_tick, channel2, linewidth=0.05, alpha=1, color='#ff0000')
 
         # # histogram plot
@@ -63,7 +66,9 @@ class PodcastPy:
 
         # finding threshold value
         threshold_val = bins[sampling_data + 1]
-        channel_noise_removed = np.int16(
+        
+        # remove value below threshold
+        channel_noise_removed = np.int32(
             np.where((-threshold_val < channel_concat) & (channel_concat < threshold_val), 
                      0, 
                      channel_concat))
@@ -71,10 +76,11 @@ class PodcastPy:
         # # noise removed plot
         # plt.figure(3)
         # plt.plot(time_tick, channel_noise_removed, linewidth=0.05, alpha=1, color='#000000')
-        #
+        
         # # histogram of noise removed plot
         # plt.figure(4)
         # plt.hist(channel_noise_removed, bins=sampling_data * 2)
+        # plt.show()
 
         return channel_noise_removed
     
@@ -149,7 +155,8 @@ class PodcastPy:
 
             # clip.to_videofile('res{}.mp4'.format(i), codec="libx264",
             #                   temp_audiofile='temp-audio.m4a', remove_temp=True, audio_codec='aac')
-            clip_array.append(clip)
+            clip_array.append(copy.copy(clip))
+            clip.close()
 
         final = concatenate_videoclips(clip_array)
         final.write_videofile(self.__result_video_path)
@@ -177,7 +184,8 @@ class PodcastPy:
         print("Process 3/7... Audio noise removal...")
         channel_noise_removed = self.__noise_removal(channel1=channel1,
                                             channel2=channel2,
-                                            hist_sampling_data=hist_sampling_data)
+                                            sampling_data=hist_sampling_data,
+                                            time_tick=time_tick)
 
         print("Process 4/7... Audio filter zero space...")
         filtered_zero = self.__filter_blank_space(
