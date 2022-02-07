@@ -1,6 +1,10 @@
 # PodcastPy
 
-Podcast Automation Tools
+Podcast Helper Tool in Python
+
+## Description
+
+**Podcast** is something that we usually hear or watch, fill our warm and relax time. Sometimes podcasters find that it is difficult to manage time to create content and process it for a *ready to hear* product. `PodcastPy` is an open-source program aimed at solving the basic and recurring problems that often occur in podcast creation.
 
 ## Installation
 
@@ -28,12 +32,15 @@ NOISE_SAMPLING_LEVEL = 100
 auto_trimmer(original_video_path=ORIGINAL_PATH,
      result_video_path=RESULT_PATH,
      time_margin_in_second=TIME_MARGIN,
-     hist_sampling_data=NOISE_SAMPLING_LEVEL)
+     noise_sampling_level=NOISE_SAMPLING_LEVEL)
 
 ```
 
-## Requirements
-
-## Usage
-
 ## Support
+
+Reach me out on [Email](mailto:razifrizqullah@gmail.com "razifrizqullah@gmail.com")
+
+## Contribution
+
+If you find out this library as useful please give it a star to let everyone know.
+If you have idea on how to improve this library, I am always open for every contributors. Thank you!
