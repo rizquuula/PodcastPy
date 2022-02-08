@@ -20,7 +20,7 @@ def auto_trimmer(
 
     #### Args:
         original_media_path (str): Original media to be processed
-        result_media_path (str): Media result path
+        result_media_path (str): Media result path, will automatic replaced
         time_margin_in_second (float, optional): Minimum time between the sound gap. Defaults to 0.25 seconds.
         noise_sampling_level (int, optional): Histogram sampling level, used on noise removal process. Defaults to 100.
     """
