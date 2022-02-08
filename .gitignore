@@ -4,6 +4,7 @@
 *.pyc
 *.wav
 *.mp4
+*.mp3
 
 __pycache__
 
@@ -15,3 +16,5 @@ venv
 build
 dist
 *.egg*
+
+test_.py
