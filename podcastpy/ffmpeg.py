@@ -1,6 +1,7 @@
 from .cmd import try_cmd
-import subprocess
+
 import os
+import subprocess
 
 class FFMPEG:
     """

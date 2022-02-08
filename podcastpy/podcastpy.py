@@ -4,17 +4,18 @@ Created on Fri 02 15:03:00 2022
 @author: eiproject (https://github.com/eiproject)
 
 """
-import shutil
-from pydub import AudioSegment
-import os
-import csv
-import time
-import scipy.io.wavfile
-import numpy as np
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-from datetime import timedelta
 from .ffmpeg import FFMPEG
+from datetime import timedelta
+from pydub import AudioSegment
+from tqdm import tqdm
+
+import csv
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import scipy.io.wavfile
+import shutil
+import time
 
 class PodcastPy:
     """
