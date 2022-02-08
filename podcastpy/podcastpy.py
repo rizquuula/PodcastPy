@@ -250,6 +250,8 @@ class PodcastPy:
         self.original_media_path = original_media_path
         self.result_media_path = result_media_path
         
+        self.__create_or_replace_temp_dir()
+        
         print("Process 1/8... Opening media...")
         sound = self.__open_media_file()
         
@@ -274,7 +276,6 @@ class PodcastPy:
         # save_to_filename="trim.csv")  # debugging purpose
 
         print("Process 6/8... Trimming media into pieces...")
-        self.__create_or_replace_temp_dir()
         temp_medias = self.__create_temp_medias(trim_time=time_for_trimming)
         self.__create_temp_metadata(temp_medias)
         
