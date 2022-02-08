@@ -8,7 +8,7 @@ class FFMPEG:
     @author: M Razif Rizqullah (https://github.com/eiproject)
     @created_at: Tue, Feb 08 2022. 13:40
     """
-    def __init__(self, log_level):
+    def __init__(self, log_level='error'):
         self.__title__ = "FFMPEG Adapter"
         
         self.ffmpeg_binary = None
@@ -34,7 +34,7 @@ class FFMPEG:
         Returns:
             (int): Subprocess code
         """
-        if self.__is_available_ffmpeg_binary(): return -1
+        if not self.__is_available_ffmpeg_binary(): return -1
         
         commands = [self.ffmpeg_binary,
                     '-hide_banner',
@@ -61,7 +61,7 @@ class FFMPEG:
         Returns:
             (int): Subprocess code
         """
-        if self.__is_available_ffmpeg_binary(): return -1
+        if not self.__is_available_ffmpeg_binary(): return -1
         
         commands = [self.ffmpeg_binary, 
                     '-y', '-hide_banner', 

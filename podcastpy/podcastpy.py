@@ -6,6 +6,7 @@ Created on Fri 02 15:03:00 2022
 """
 import subprocess
 import shutil
+from importlib_metadata import metadata
 from pydub import AudioSegment
 import os
 import csv
@@ -15,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from datetime import timedelta
+from .ffmpeg import FFMPEG
 
 class PodcastPy:
     """
@@ -32,10 +34,14 @@ class PodcastPy:
         self.temp_dir = 'temp_'
         self.temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
         
+        self.ffmpeg = FFMPEG()
+        
+        
     def __open_video_file(self):
         '''Open audio from video file using pydub'''
         sound = AudioSegment.from_file(self.original_video_path)
         return sound    
+    
     
     def __extract_audio_raw_data(self):
         '''Extract the audio to a .wav file'''
@@ -96,6 +102,7 @@ class PodcastPy:
 
         return channel_noise_removed
     
+    
     def __finding_blank_space(self, channel, sample_rate, save_to_filename=None):
         '''Find noise or a zero blank amplitude'''
         # start to filter blank space [start_index, end_index, streak_counter]
@@ -136,6 +143,7 @@ class PodcastPy:
                     writer.writerow(filtered_zero[i])
 
         return filtered_zero
+
 
     def __trim_timer(self, filtered_array, min_margin=0.5, save_to_filename=None):
         '''Create trimming time'''
@@ -181,6 +189,7 @@ class PodcastPy:
         
         return out
         
+        
     def __create_temp_videos(self, trim_time):
         temp_videos = []
         num_of_parts = len(trim_time)
@@ -188,23 +197,15 @@ class PodcastPy:
             temp_filename = 'temp_processing_{}.mp4'.format(i)
             temp_fullpath = os.path.join(self.temp_dir, temp_filename)
             
-            # start_td = self.__get_timedelta_string(trim_time[i][0])
-            # end_td = self.__get_timedelta_string(trim_time[i][1])
-            # code = self.__ffmpeg_split_video(start_td, end_td, temp_fullpath)
-            
             start_td = float(trim_time[i][0])
             end_td = float(trim_time[i][1])
-            code = self.__ffmpeg_split_video2(start_td, end_td, temp_fullpath)
             
-            # clip = VideoFileClip(self.__original_video_path).subclip(trim_time[i][0], trim_time[i][1])
-            # clip.write_videofile(temp_fullpath, 
-            #                   codec="libx264",
-            #                   temp_audiofile='temp-audio.m4a', 
-            #                   remove_temp=True, 
-            #                   audio_codec='aac',
-            #                   logger=None,
-            #                   verbose=False
-            #                   )
+            code = self.ffmpeg.split_video(
+                original_path=self.original_video_path, 
+                start=start_td, 
+                end=end_td, 
+                output_path=temp_fullpath)
+            
             temp_videos.append(temp_filename)
         
         return temp_videos
@@ -215,9 +216,6 @@ class PodcastPy:
             for v in videos:
                 f.write('file ' + v + '\n')
         
-        
-
-
 
     def __create_or_replace_temp_dir(self):
         if os.path.isdir(self.temp_dir):
@@ -284,7 +282,10 @@ class PodcastPy:
         self.__create_temp_metadata(temp_videos)
         
         print("Process 7/8... Merging video...")
-        self.__ffmpeg_merge_video()
+        self.ffmpeg.merge_video(
+            metadata=self.temp_vid_result_metadata,
+            output_path=self.result_video_path
+        )
         
         print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))
         self.__delete_wav_audio_path()
