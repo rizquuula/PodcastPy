@@ -1,3 +1,9 @@
+"""
+Created on Fri, Feb 04 14:54:00 2022
+@license: MIT License
+@author: eiproject (https://github.com/eiproject)
+
+"""
 from setuptools import setup
 from podcastpy import __version__
 import pathlib
