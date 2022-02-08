@@ -1,7 +1,11 @@
-from .cmd import try_cmd, subprocess_call
+"""
+Created on Tue, Feb 08 14:30:00 2022
+@license: MIT License
+@author: eiproject (https://github.com/eiproject)
 
+"""
+from .cmd import try_cmd, subprocess_call
 import os
-import subprocess
 
 class FFMPEG:
     """
