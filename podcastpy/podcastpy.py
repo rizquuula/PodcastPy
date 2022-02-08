@@ -7,7 +7,6 @@ Created on Fri 02 15:03:00 2022
 import subprocess
 import shutil
 from pydub import AudioSegment
-from moviepy.editor import VideoFileClip
 import os
 import csv
 import time
@@ -15,6 +14,7 @@ import scipy.io.wavfile
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from datetime import timedelta
 
 class PodcastPy:
     """
@@ -158,20 +158,51 @@ class PodcastPy:
         return trim_time
     
     
+    def __get_timedelta_string(self, seconds):
+        delay = timedelta(seconds=seconds)
+        
+        day_hours = 0
+        raw_timestr = ''
+        if delay.days > 0:
+            day_hours += delay.days * 24
+            raw_timestr = str(delay).split(', ')[-1]
+        else:
+            raw_timestr = str(delay)
+        
+        raw_time_arr = raw_timestr.split(':')
+        hours_ = "%02d" % (int(raw_time_arr[0]) + day_hours)
+        minutes_ = "%02d" % int(raw_time_arr[1])
+        seconds_ = "%02d" % int(float(raw_time_arr[2]))
+        decimals_ = '.' + ("%0.3f" % (float(raw_time_arr[2]),)).split('.')[-1]
+        
+        out  = ":".join([hours_, minutes_, seconds_ + decimals_])
+        
+        return out
+        
     def __create_temp_videos(self, trim_time):
         temp_videos = []
         num_of_parts = len(trim_time)
         for i in tqdm(range(num_of_parts), desc="Trimming {} parts: ".format(num_of_parts)):
-            clip = VideoFileClip(self.__original_video_path).subclip(trim_time[i][0], trim_time[i][1])
             temp_filename = 'temp_processing_{}.mp4'.format(i)
-            clip.write_videofile(os.path.join(self.__temp_dir, temp_filename), 
-                              codec="libx264",
-                              temp_audiofile='temp-audio.m4a', 
-                              remove_temp=True, 
-                              audio_codec='aac',
-                              logger=None,
-                              verbose=False
-                              )
+            temp_fullpath = os.path.join(self.__temp_dir, temp_filename)
+            
+            # start_td = self.__get_timedelta_string(trim_time[i][0])
+            # end_td = self.__get_timedelta_string(trim_time[i][1])
+            # code = self.__ffmpeg_split_video(start_td, end_td, temp_fullpath)
+            
+            start_td = float(trim_time[i][0])
+            end_td = float(trim_time[i][1])
+            code = self.__ffmpeg_split_video2(start_td, end_td, temp_fullpath)
+            
+            # clip = VideoFileClip(self.__original_video_path).subclip(trim_time[i][0], trim_time[i][1])
+            # clip.write_videofile(temp_fullpath, 
+            #                   codec="libx264",
+            #                   temp_audiofile='temp-audio.m4a', 
+            #                   remove_temp=True, 
+            #                   audio_codec='aac',
+            #                   logger=None,
+            #                   verbose=False
+            #                   )
             temp_videos.append(temp_filename)
         
         return temp_videos
@@ -182,15 +213,31 @@ class PodcastPy:
             for v in videos:
                 f.write('file ' + v + '\n')
         
+        
     def __ffmpeg_merge_video(self):
         merge_command = 'ffmpeg -hide_banner -loglevel error -f concat -i {} -c copy {}'.format(
             self.__temp_vid_result_metadata, self.__result_video_path)
         
         code = subprocess.call(merge_command, shell=True)
-        # print('Result code: ', code)
+        return code
+    
+    
+    def __ffmpeg_split_video(self, start, end, temp_file_path):
+        merge_command = 'ffmpeg -hide_banner -loglevel error -ss {} -to {} -i {} -vcodec copy -acodec copy -avoid_negative_ts make_zero {}'.format(
+            start, end, self.__original_video_path, temp_file_path)
+        
+        code = subprocess.call(merge_command, shell=True)
         return code
 
-    
+
+    def __ffmpeg_split_video2(self, start, end, temp_file_path):
+        merge_command = 'ffmpeg -y -hide_banner -loglevel error -ss {} -i {} -t {} -map 0 -vcodec copy -acodec copy {}'.format(
+            "%0.2f"%start, self.__original_video_path, "%0.2f"%(end-start), temp_file_path)
+        
+        code = subprocess.call(merge_command, shell=True)
+        return code
+
+
     def __create_or_replace_temp_dir(self):
         if os.path.isdir(self.__temp_dir):
             self.__delete_temp_dir()
@@ -201,6 +248,7 @@ class PodcastPy:
     def __delete_temp_dir(self):
         shutil.rmtree(self.__temp_dir)
         
+        
     def __delete_wav_audio_path(self):
         os.remove(self.__wav_audio_path)
         
@@ -208,6 +256,7 @@ class PodcastPy:
     def __create_or_replace_result_file(self):
         if os.path.isfile(self.__result_video_path):
             os.remove(self.__result_video_path)
+    
     
     def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, noise_sampling_level:int=100):
         """Auto trim video to remove audio noise and blank using PodcastPy
@@ -258,4 +307,4 @@ class PodcastPy:
         
         print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))
         self.__delete_wav_audio_path()
-        self.__delete_temp_dir()
+        # self.__delete_temp_dir()
