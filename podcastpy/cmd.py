@@ -26,3 +26,21 @@ def try_cmd(cmd):
         return False, err
     else:
         return True, None
+    
+    
+def subprocess_call(cmd:str):
+    '''Subprocess calling a command and give error logs'''
+    is_errors = False
+    try:
+        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+        stdoutdata, stderrdata = p.communicate()
+        if p.wait() != 0:
+            stderrmsg = cmd.split(' ')[0] + " > " + str(stderrdata).split('\\r\\n')[-2]
+            is_errors = True
+            print("Error: " + stderrmsg)
+            return stderrdata, is_errors
+        # no error
+        return stderrdata, is_errors
+    except OSError as e:
+        is_errors = True
+        return e.strerror, is_errors

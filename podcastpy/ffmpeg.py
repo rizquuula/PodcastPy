@@ -1,4 +1,4 @@
-from .cmd import try_cmd
+from .cmd import try_cmd, subprocess_call
 
 import os
 import subprocess
@@ -23,10 +23,19 @@ class FFMPEG:
         if self.__is_valid_ffmpeg_binary(binary_path):
             self.ffmpeg_binary = binary_path
         
+    
+    def is_media_supported(self, filename:str):
+        commands = [self.ffmpeg_binary,
+                    '-i',filename, '-f null /dev/null']
         
-    def merge_video(self, metadata:str, output_path:str):
+        cmd = ' '.join(commands)
+        stderrdata, is_errors = subprocess_call(cmd)
+        return is_errors
+    
+    
+    def merge_media(self, metadata:str, output_path:str):
         """
-        Merge video parts using a metadata in a text file
+        Merge media parts using a metadata in a text file
 
         Args:
             metadata (str): Metadata file, consist `file filename.format`
@@ -44,17 +53,17 @@ class FFMPEG:
                     '-i', metadata,
                     '-c', 'copy',
                     output_path]
+        
         cmd = ' '.join(commands)
-        code:int = subprocess.call(cmd, shell=True)
-        return code
+        stderrdata, is_errors = subprocess_call(cmd)
+        return is_errors
 
-
-    def split_video(self, original_path:str, start:float, end:float, output_path:str):
+    def split_media(self, original_path:str, start:float, end:float, output_path:str):
         """
-        Split a video using start and end time in (float) seconds
+        Split a media using start and end time in (float) seconds
 
         Args:
-            original_path (str): Source video
+            original_path (str): Source media
             start (float): Start time
             end (float): End time
             output_path (str): Output path
@@ -75,8 +84,9 @@ class FFMPEG:
                     '-acodec', 'copy', 
                     output_path]
         
-        code:int = subprocess.call(commands, shell=True)
-        return code
+        cmd = ' '.join(commands)
+        stderrdata, is_errors = subprocess_call(cmd)
+        return is_errors
     
     
     def __auto_detect_ffmpeg_binary(self):

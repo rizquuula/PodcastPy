@@ -27,27 +27,27 @@ class PodcastPy:
         self.__title__ = 'PodcastPy'
         self.__description__ = 'Podcast Automation Tools'
         
-        self.original_video_path = None
+        self.original_media_path = None
         self.wav_audio_path = None
-        self.result_video_path = None
+        self.result_media_path = None
         self.temp_dir = 'temp_'
-        self.temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
+        self.temp_vid_result_metadata = 'temp_/temp_medias_metadata.txt'
         
         self.ffmpeg = FFMPEG()
         
         
-    def __open_video_file(self):
-        '''Open audio from video file using pydub'''
-        sound = AudioSegment.from_file(self.original_video_path)
+    def __open_media_file(self):
+        '''Open audio from media file using pydub'''
+        sound = AudioSegment.from_file(self.original_media_path)
         return sound    
     
     
     def __extract_audio_raw_data(self):
         '''Extract the audio to a .wav file'''
         self.wav_audio_path = os.path.join(
-            self.temp_dir, os.path.splitext(os.path.basename(self.original_video_path))[0] + '.wav') 
+            self.temp_dir, os.path.splitext(os.path.basename(self.original_media_path))[0] + '.wav') 
         
-        AudioSegment.from_file(self.original_video_path).export(self.wav_audio_path, format='wav')
+        AudioSegment.from_file(self.original_media_path).export(self.wav_audio_path, format='wav')
 
         # read wav file using scipy
         rate, audData = scipy.io.wavfile.read(self.wav_audio_path)
@@ -189,8 +189,8 @@ class PodcastPy:
         return out
         
         
-    def __create_temp_videos(self, trim_time):
-        temp_videos = []
+    def __create_temp_medias(self, trim_time):
+        temp_medias = []
         num_of_parts = len(trim_time)
         for i in tqdm(range(num_of_parts), desc="Trimming {} parts: ".format(num_of_parts)):
             temp_filename = 'temp_processing_{}.mp4'.format(i)
@@ -199,20 +199,20 @@ class PodcastPy:
             start_td = float(trim_time[i][0])
             end_td = float(trim_time[i][1])
             
-            code = self.ffmpeg.split_video(
-                original_path=self.original_video_path, 
+            code = self.ffmpeg.split_media(
+                original_path=self.original_media_path, 
                 start=start_td, 
                 end=end_td, 
                 output_path=temp_fullpath)
             
-            temp_videos.append(temp_filename)
+            temp_medias.append(temp_filename)
         
-        return temp_videos
+        return temp_medias
 
 
-    def __create_temp_metadata(self, videos):
+    def __create_temp_metadata(self, medias):
         with open(self.temp_vid_result_metadata, mode='w', newline='') as f:
-            for v in videos:
+            for v in medias:
                 f.write('file ' + v + '\n')
         
 
@@ -232,29 +232,26 @@ class PodcastPy:
         
         
     def __create_or_replace_result_file(self):
-        if os.path.isfile(self.result_video_path):
-            os.remove(self.result_video_path)
+        if os.path.isfile(self.result_media_path):
+            os.remove(self.result_media_path)
     
     
-    def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, noise_sampling_level:int=100):
-        """Auto trim video to remove audio noise and blank using PodcastPy
+    def auto_trimmer(self, original_media_path:str, result_media_path:str, time_margin_in_second:float=0.50, noise_sampling_level:int=100):
+        """Auto trim media to remove audio noise and blank using PodcastPy
 
         Args:
-            original_video_path (str): Original video to be processed
-            result_video_path (str): Video result path
+            original_media_path (str): Original media to be processed
+            result_media_path (str): Media result path
             time_margin_in_second (float, optional): Minimum time between the sound gap. Defaults to 0.25 seconds.
             noise_sampling_level (int, optional): Histogram sampling data, used on noise removal process. Defaults to 100.
         """
         
         start_time = time.time()
-        self.original_video_path = original_video_path
-        self.result_video_path = result_video_path
+        self.original_media_path = original_media_path
+        self.result_media_path = result_media_path
         
-        self.__create_or_replace_temp_dir()
-        self.__create_or_replace_result_file()
-        
-        print("Process 1/8... Opening video...")
-        sound = self.__open_video_file()
+        print("Process 1/8... Opening media...")
+        sound = self.__open_media_file()
         
         print("Process 2/8... Extracting audio...")
         channel1, channel2, time_tick = self.__extract_audio_raw_data()
@@ -276,14 +273,16 @@ class PodcastPy:
                                     min_margin=time_margin_in_second)
         # save_to_filename="trim.csv")  # debugging purpose
 
-        print("Process 6/8... Trimming video into pieces...")
-        temp_videos = self.__create_temp_videos(trim_time=time_for_trimming)
-        self.__create_temp_metadata(temp_videos)
+        print("Process 6/8... Trimming media into pieces...")
+        self.__create_or_replace_temp_dir()
+        temp_medias = self.__create_temp_medias(trim_time=time_for_trimming)
+        self.__create_temp_metadata(temp_medias)
         
-        print("Process 7/8... Merging video...")
-        self.ffmpeg.merge_video(
+        print("Process 7/8... Merging media...")
+        self.__create_or_replace_result_file()
+        self.ffmpeg.merge_media(
             metadata=self.temp_vid_result_metadata,
-            output_path=self.result_video_path
+            output_path=self.result_media_path
         )
         
         print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))
