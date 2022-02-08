@@ -36,8 +36,8 @@ TIME_MARGIN = 0.50
 # number of how many bars in the histogram
 NOISE_SAMPLING_LEVEL = 100
 
-auto_trimmer(original_video_path=ORIGINAL_PATH,
-     result_video_path=RESULT_PATH,
+auto_trimmer(original_media_path=ORIGINAL_PATH,
+     result_media_path=RESULT_PATH,
      time_margin_in_second=TIME_MARGIN,
      noise_sampling_level=NOISE_SAMPLING_LEVEL)
 
