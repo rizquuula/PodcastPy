@@ -20,30 +20,32 @@ class PodcastPy:
     """
     Podcast Helper Tool in Python
     @author: M Razif Rizqullah (https://github.com/eiproject)
+    @created_at: Mon, Feb 07 2022. 11:00
     """
     def __init__(self):
         self.__title__ = 'PodcastPy'
         self.__description__ = 'Podcast Automation Tools'
-        self.__original_video_path = None
-        self.__wav_audio_path = None
-        self.__result_video_path = None
-        self.__temp_dir = 'temp_'
-        self.__temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
+        
+        self.original_video_path = None
+        self.wav_audio_path = None
+        self.result_video_path = None
+        self.temp_dir = 'temp_'
+        self.temp_vid_result_metadata = 'temp_/temp_videos_metadata.txt'
         
     def __open_video_file(self):
         '''Open audio from video file using pydub'''
-        sound = AudioSegment.from_file(self.__original_video_path)
+        sound = AudioSegment.from_file(self.original_video_path)
         return sound    
     
     def __extract_audio_raw_data(self):
         '''Extract the audio to a .wav file'''
-        self.__wav_audio_path = os.path.join(
-            self.__temp_dir, os.path.splitext(os.path.basename(self.__original_video_path))[0] + '.wav') 
+        self.wav_audio_path = os.path.join(
+            self.temp_dir, os.path.splitext(os.path.basename(self.original_video_path))[0] + '.wav') 
         
-        AudioSegment.from_file(self.__original_video_path).export(self.__wav_audio_path, format='wav')
+        AudioSegment.from_file(self.original_video_path).export(self.wav_audio_path, format='wav')
 
         # read wav file using scipy
-        rate, audData = scipy.io.wavfile.read(self.__wav_audio_path)
+        rate, audData = scipy.io.wavfile.read(self.wav_audio_path)
 
         # if stereo grab both channels
         if audData.shape[1] > 1:
@@ -184,7 +186,7 @@ class PodcastPy:
         num_of_parts = len(trim_time)
         for i in tqdm(range(num_of_parts), desc="Trimming {} parts: ".format(num_of_parts)):
             temp_filename = 'temp_processing_{}.mp4'.format(i)
-            temp_fullpath = os.path.join(self.__temp_dir, temp_filename)
+            temp_fullpath = os.path.join(self.temp_dir, temp_filename)
             
             # start_td = self.__get_timedelta_string(trim_time[i][0])
             # end_td = self.__get_timedelta_string(trim_time[i][1])
@@ -209,53 +211,32 @@ class PodcastPy:
 
 
     def __create_temp_metadata(self, videos):
-        with open(self.__temp_vid_result_metadata, mode='w', newline='') as f:
+        with open(self.temp_vid_result_metadata, mode='w', newline='') as f:
             for v in videos:
                 f.write('file ' + v + '\n')
         
         
-    def __ffmpeg_merge_video(self):
-        merge_command = 'ffmpeg -hide_banner -loglevel error -f concat -i {} -c copy {}'.format(
-            self.__temp_vid_result_metadata, self.__result_video_path)
-        
-        code = subprocess.call(merge_command, shell=True)
-        return code
-    
-    
-    def __ffmpeg_split_video(self, start, end, temp_file_path):
-        merge_command = 'ffmpeg -hide_banner -loglevel error -ss {} -to {} -i {} -vcodec copy -acodec copy -avoid_negative_ts make_zero {}'.format(
-            start, end, self.__original_video_path, temp_file_path)
-        
-        code = subprocess.call(merge_command, shell=True)
-        return code
 
-
-    def __ffmpeg_split_video2(self, start, end, temp_file_path):
-        merge_command = 'ffmpeg -y -hide_banner -loglevel error -ss {} -i {} -t {} -map 0 -vcodec copy -acodec copy {}'.format(
-            "%0.2f"%start, self.__original_video_path, "%0.2f"%(end-start), temp_file_path)
-        
-        code = subprocess.call(merge_command, shell=True)
-        return code
 
 
     def __create_or_replace_temp_dir(self):
-        if os.path.isdir(self.__temp_dir):
+        if os.path.isdir(self.temp_dir):
             self.__delete_temp_dir()
             
-        os.makedirs(self.__temp_dir)
+        os.makedirs(self.temp_dir)
         
         
     def __delete_temp_dir(self):
-        shutil.rmtree(self.__temp_dir)
+        shutil.rmtree(self.temp_dir)
         
         
     def __delete_wav_audio_path(self):
-        os.remove(self.__wav_audio_path)
+        os.remove(self.wav_audio_path)
         
         
     def __create_or_replace_result_file(self):
-        if os.path.isfile(self.__result_video_path):
-            os.remove(self.__result_video_path)
+        if os.path.isfile(self.result_video_path):
+            os.remove(self.result_video_path)
     
     
     def auto_trimmer(self, original_video_path:str, result_video_path:str, time_margin_in_second:float=0.50, noise_sampling_level:int=100):
@@ -269,8 +250,8 @@ class PodcastPy:
         """
         
         start_time = time.time()
-        self.__original_video_path = original_video_path
-        self.__result_video_path = result_video_path
+        self.original_video_path = original_video_path
+        self.result_video_path = result_video_path
         
         self.__create_or_replace_temp_dir()
         self.__create_or_replace_result_file()
