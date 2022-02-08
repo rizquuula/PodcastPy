@@ -4,9 +4,7 @@ Created on Fri 02 15:03:00 2022
 @author: eiproject (https://github.com/eiproject)
 
 """
-import subprocess
 import shutil
-from importlib_metadata import metadata
 from pydub import AudioSegment
 import os
 import csv
@@ -289,4 +287,4 @@ class PodcastPy:
         
         print("Process 8/8... Done in {} seconds...".format(time.time() - start_time))
         self.__delete_wav_audio_path()
-        # self.__delete_temp_dir()
+        self.__delete_temp_dir()
